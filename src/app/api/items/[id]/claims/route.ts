@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,12 +15,14 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const {id} = await params;
+
     const json = await request.json();
     const { description, evidence } = json;
 
     // Check if item exists
     const item = await prisma.item.findUnique({
-      where: { id: context.params.id },
+      where: { id },
     });
 
     if (!item) {
@@ -30,7 +32,7 @@ export async function POST(
     // Check if user already has a pending claim
     const existingClaim = await prisma.claim.findFirst({
       where: {
-        itemId: context.params.id,
+        itemId: id,
         claimerId: session.user.id,
         deletedAt: null,
       },
@@ -43,7 +45,7 @@ export async function POST(
     // Create new claim
     const claim = await prisma.claim.create({
       data: {
-        itemId: context.params.id,
+        itemId: id,
         claimerId: session.user.id,
         description,
         evidence,
