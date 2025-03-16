@@ -6,18 +6,19 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const {id} = await params;
+
     const claim = await prisma.claim.findFirst({
       where: {
-        itemId: context.params.id,
+        itemId: id,
         claimerId: session.user.id,
         deletedAt: null,
       },

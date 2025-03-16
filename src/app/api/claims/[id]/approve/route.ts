@@ -4,11 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextRequest } from "next/server";
 
-type Context = { params: { id: string } };
-
 export async function POST(
   request: NextRequest,
-  context: Context
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,9 +15,11 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const {id} = await params;
+
     // Get the claim
     const claim = await prisma.claim.findUnique({
-      where: { id: context.params.id },
+      where: { id },
       include: { item: true },
     });
 
@@ -29,7 +29,7 @@ export async function POST(
 
     // Update claim status
     const updatedClaim = await prisma.claim.update({
-      where: { id: context.params.id },
+      where: { id },
       data: { status: "APPROVED" },
     });
 
