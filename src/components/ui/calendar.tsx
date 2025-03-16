@@ -4,9 +4,6 @@ import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
 
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 function Calendar({
@@ -41,10 +38,6 @@ function Calendar({
           "day-outside text-gray-500 opacity-50 aria-selected:bg-gray-500 aria-selected:text-gray-900 aria-selected:bg-opacity-10",
         day_disabled: "text-gray-500 opacity-50",
         day_hidden: "invisible",
-      }}
-      components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
       }}
       {...props}
     />
