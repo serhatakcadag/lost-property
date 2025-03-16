@@ -228,11 +228,11 @@ export default function ItemDetailsPage({ params }: { params: Promise<{ id: stri
       );
     }
 
-    if (session.user.id === item.reporterId) {
+    if (session.user.id === item?.reporterId) {
       return null; // Don't show contact button for own items
     }
 
-    if (!item.reporter.email) {
+    if (!item?.reporter.email) {
       return (
         <Button variant="outline" disabled>
           No contact information available
