@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,8 +15,10 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const {id} = await params;
+
     const item = await prisma.item.findUnique({
-      where: { id: context.params.id },
+      where: { id },
     });
 
     if (!item) {
@@ -30,7 +32,7 @@ export async function DELETE(
 
     // Soft delete
     await prisma.item.update({
-      where: { id: context.params.id },
+      where: { id },
       data: { deletedAt: new Date() },
     });
 
@@ -43,7 +45,7 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,8 +54,10 @@ export async function GET(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const {id} = await params;
+
     const item = await prisma.item.findUnique({
-      where: { id: context.params.id },
+      where: { id },
       include: {
         reporter: {
           select: {
@@ -77,7 +81,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -86,11 +90,13 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const {id} = await params;
+
     const json = await request.json();
     const { title, description, category, location, date, images } = json;
 
     const item = await prisma.item.findUnique({
-      where: { id: context.params.id },
+      where: { id },
     });
 
     if (!item) {
@@ -103,7 +109,7 @@ export async function PATCH(
     }
 
     const updatedItem = await prisma.item.update({
-      where: { id: context.params.id },
+      where: { id },
       data: {
         title,
         description,
