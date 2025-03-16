@@ -1,34 +1,24 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const data = await req.formData();
-    const email = data.get("email") as string;
-    const password = data.get("password") as string;
-    const name = data.get("name") as string;
+    const json = await request.json();
+    const { name, email, password } = json;
 
-    if (!email || !password || !name) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    if (!name || !email || !password) {
+      return new NextResponse("Missing required fields", { status: 400 });
     }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: {
-        email,
-        deletedAt: null,
-      },
+      where: { email },
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
+      return new NextResponse("User already exists", { status: 400 });
     }
 
     // Hash password
@@ -37,25 +27,19 @@ export async function POST(req: Request) {
     // Create user
     const user = await prisma.user.create({
       data: {
-        email,
         name,
+        email,
         password: hashedPassword,
       },
     });
 
-    // Redirect to login page after successful registration
-    const response = NextResponse.redirect(new URL("/login", req.url), 303);
-    response.cookies.set("registration_success", "true", {
-      maxAge: 5, // 5 seconds
-      path: "/",
+    return NextResponse.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
     });
-    
-    return response;
   } catch (error) {
-    console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "Error creating user" },
-      { status: 500 }
-    );
+    console.error("Error:", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 } 

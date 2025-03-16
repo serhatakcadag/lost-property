@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { NextRequest } from "next/server";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +17,7 @@ export async function GET(
 
     const claim = await prisma.claim.findFirst({
       where: {
-        itemId: params.id,
+        itemId: context.params.id,
         claimerId: session.user.id,
         deletedAt: null,
       },

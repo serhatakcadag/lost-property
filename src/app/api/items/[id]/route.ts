@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { NextRequest } from "next/server";
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,7 +16,7 @@ export async function DELETE(
     }
 
     const item = await prisma.item.findUnique({
-      where: { id: params.id },
+      where: { id: context.params.id },
     });
 
     if (!item) {
@@ -29,7 +30,7 @@ export async function DELETE(
 
     // Soft delete
     await prisma.item.update({
-      where: { id: params.id },
+      where: { id: context.params.id },
       data: { deletedAt: new Date() },
     });
 
@@ -41,8 +42,8 @@ export async function DELETE(
 }
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,7 +53,7 @@ export async function GET(
     }
 
     const item = await prisma.item.findUnique({
-      where: { id: params.id },
+      where: { id: context.params.id },
       include: {
         reporter: {
           select: {
@@ -75,8 +76,8 @@ export async function GET(
 }
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -89,7 +90,7 @@ export async function PATCH(
     const { title, description, category, location, date, images } = json;
 
     const item = await prisma.item.findUnique({
-      where: { id: params.id },
+      where: { id: context.params.id },
     });
 
     if (!item) {
@@ -102,7 +103,7 @@ export async function PATCH(
     }
 
     const updatedItem = await prisma.item.update({
-      where: { id: params.id },
+      where: { id: context.params.id },
       data: {
         title,
         description,

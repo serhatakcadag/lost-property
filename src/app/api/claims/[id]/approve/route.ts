@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { NextRequest } from "next/server";
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +17,7 @@ export async function POST(
 
     // Get the claim
     const claim = await prisma.claim.findUnique({
-      where: { id: params.id },
+      where: { id: context.params.id },
       include: { item: true },
     });
 
@@ -26,7 +27,7 @@ export async function POST(
 
     // Update claim status
     const updatedClaim = await prisma.claim.update({
-      where: { id: params.id },
+      where: { id: context.params.id },
       data: { status: "APPROVED" },
     });
 
