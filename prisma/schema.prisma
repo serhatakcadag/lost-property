@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ItemStatus {
+  PENDING
+  FOUND
+  RETURNED
+  CLAIMED
+  CLOSED
+}
+
+enum ItemCategory {
+  ELECTRONICS
+  CLOTHING
+  ACCESSORIES
+  DOCUMENTS
+  KEYS
+  BAGS
+  OTHERS
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  name       String?
+  password   String
+  isAdmin    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  foundItems Item[]    @relation("FoundItems")
+  lostItems  Item[]    @relation("LostItems")
+  claims     Claim[]   @relation("Claims")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
+  @@index([deletedAt])
+}
+
+model Item {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    ItemCategory
+  status      ItemStatus   @default(PENDING)
+  location    String?
+  date        DateTime
+  images      String[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  reporterId  String
+  finderId    String?
+  finder      User?        @relation("FoundItems", fields: [finderId], references: [id])
+  reporter    User         @relation("LostItems", fields: [reporterId], references: [id])
+  claims      Claim[]
+  messages    Message[]
+
+  @@index([deletedAt])
+  @@index([status])
+  @@index([category])
+}
+
+model Claim {
+  id          String      @id @default(cuid())
+  itemId      String
+  claimerId   String
+  status      ClaimStatus @default(PENDING)
+  description String      // Proof of ownership
+  evidence    String[]    // URLs to evidence images
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  
+  item        Item        @relation(fields: [itemId], references: [id])
+  claimer     User        @relation("Claims", fields: [claimerId], references: [id])
+
+  @@index([itemId])
+  @@index([claimerId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  senderId    String
+  recipientId String
+  itemId      String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  recipient   User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  item        Item     @relation(fields: [itemId], references: [id])
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([itemId])
+}
