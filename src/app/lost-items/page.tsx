@@ -7,9 +7,9 @@ import Link from "next/link";
 export default async function LostItemsPage({
   searchParams,
 }: {
-  searchParams: { search?: string; category?: string; status?: string };
+  searchParams: Promise<{ search?: string; category?: string; status?: string }>;
 }) {
-  const { search, category, status } = searchParams;
+  const { search, category, status } = await searchParams;
 
   const items = await prisma.item.findMany({
     where: {
