@@ -4,9 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NextRequest } from "next/server";
 
+type Context = { params: { id: string } };
+
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: Context
 ) {
   try {
     const session = await getServerSession(authOptions);
