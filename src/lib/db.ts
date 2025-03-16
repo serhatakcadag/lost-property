@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { ItemCategory, ItemStatus, PrismaClient } from '@prisma/client'
 import { sql } from '@vercel/postgres'
 
 // PrismaClient is attached to the `global` object in development to prevent
@@ -24,8 +24,8 @@ export const db = {
   },
 
   async findItems(options: {
-    status?: string
-    category?: string
+    status?: ItemStatus
+    category?: ItemCategory
     searchTerm?: string
   }) {
     return prisma.item.findMany({
