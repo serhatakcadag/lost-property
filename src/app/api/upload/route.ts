@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile } from "fs/promises";
-import path from "path";
 import { NextRequest } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,28 +13,32 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get('file') as File;
 
     if (!file) {
-      return new NextResponse("No file provided", { status: 400 });
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const fileExt = file.name.split('.').pop();
+    const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-    // Create unique filename
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    const filename = `${uniqueSuffix}-${file.name}`;
-    
-    // Save to public/uploads directory
-    const uploadDir = path.join(process.cwd(), 'public/uploads');
-    await writeFile(path.join(uploadDir, filename), buffer);
+    const { data, error } = await supabase.storage
+      .from('uploads')
+      .upload(uniqueName, fileBuffer, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    // Return the URL that can be used to access the file
-    return NextResponse.json({
-      url: `/uploads/${filename}`,
-    });
+    if (error) {
+      console.error('Upload error:', error);
+      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    }
+
+    const publicUrl = supabase.storage.from('uploads').getPublicUrl(uniqueName).data.publicUrl;
+
+    return NextResponse.json({ url: publicUrl });
+
   } catch (error) {
     console.error("Upload error:", error);
     return new NextResponse("Internal Error", { status: 500 });
