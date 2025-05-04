@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { authOptions } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +31,7 @@ export default async function RootLayout({
             <main className="flex-1">{children}</main>
           </div>
           <Toaster />
+          <SonnerToaster />
         </SessionProvider>
       </body>
     </html>

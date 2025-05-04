@@ -1,16 +1,47 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
-export default async function RegisterPage() {
-  const session = await getServerSession(authOptions);
+export default function RegisterPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (session) {
-    redirect("/");
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          email: formData.get("email"),
+          password: formData.get("password"),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      toast.success("Account created successfully!");
+      router.push("/login");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -26,7 +57,7 @@ export default async function RegisterPage() {
             </p>
           </div>
           <div className="grid gap-6">
-            <form action="/api/auth/register" method="POST">
+            <form onSubmit={onSubmit}>
               <div className="grid gap-2">
                 <div className="grid gap-1">
                   <Label className="sr-only" htmlFor="name">
@@ -43,6 +74,7 @@ export default async function RegisterPage() {
                     required
                     minLength={2}
                     maxLength={50}
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-1">
@@ -58,6 +90,7 @@ export default async function RegisterPage() {
                     autoComplete="email"
                     autoCorrect="off"
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-1">
@@ -72,29 +105,14 @@ export default async function RegisterPage() {
                     autoComplete="new-password"
                     required
                     minLength={8}
+                    disabled={isLoading}
                   />
                 </div>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating account..." : "Create Account"}
+                </Button>
               </div>
             </form>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button variant="outline" type="button" disabled>
-                GitHub
-              </Button>
-              <Button variant="outline" type="button" disabled>
-                Google
-              </Button>
-            </div>
           </div>
           <p className="px-8 text-center text-sm text-muted-foreground">
             <Link href="/login" className="hover:text-brand underline underline-offset-4">
